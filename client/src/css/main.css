@@ -1,0 +1,7 @@
+/* stylelint-disable at-rule-no-unknown */
+/* Tailwind imports MUST come first */
+@import "tailwindcss";
+
+body {
+  margin: 0px;
+}
