@@ -1,222 +1,243 @@
-# 🏥 Global Hospital Management Dashboard (Frontend)
+# 🏥 Global Hospital Management System
 
-## Overview
-
-The **Global Hospital Management Dashboard** is a React-based administrative frontend designed to interact with a hospital backend via **stored procedures and database views**. The application provides a **single unified interface** for executing complex hospital operations (procedures) and querying real-time system state (views) without exposing raw SQL or backend logic to the user.
-
-This frontend acts as a **controlled execution layer** between hospital administrators and the underlying database-driven backend.
+A **full-stack hospital management system** built around a **database-first, stored-procedure architecture**. Business logic lives in MySQL, not application code—mirroring how enterprise healthcare and financial systems operate in production.
 
 ---
 
-## Core Design Philosophy
+## 🎯 What This Is
 
-- **Procedure-driven UI** — Every mutation maps directly to a backend procedure
-- **View-driven UI** — Every read-only query maps to a backend database view
-- **Schema-aware rendering** — Forms and tables are generated dynamically from metadata
-- **Stateless backend interaction** — Frontend only sends structured JSON payloads
-- **Separation of concerns** — UI logic is decoupled from business rules
+A three-layer system modeling real Emergency Room operations:
 
----
+- **MySQL Database** — enforces business rules via stored procedures and constraints
+- **Node.js/Express API** — thin orchestration layer (no business logic)
+- **React Dashboard** — metadata-driven UI for executing procedures and viewing system state
 
-## Application Architecture
-
-```
-src/
-├── App.jsx                  # Root layout (Sidebar + MainContent)
-├── components/
-│   ├── Sidebar.jsx          # Action selector (procedures / views)
-│   ├── MainContent.jsx      # Dynamic content router
-│   ├── ProcedureContent.jsx # Dynamic form renderer
-│   ├── ViewContent.jsx      # Dynamic table renderer
-│   └── Navbar.jsx
-├── data/
-│   ├── procedures.js        # Procedure metadata
-│   ├── views.js             # View metadata
-│   └── serverAPI.js         # Backend base URL
-├── css/
-│   └── main.css             # Tailwind entry
-└── main.jsx                 # React entry point
-```
+**Core principle:** Push complexity into the database. The API routes requests, the UI adapts dynamically, and the database enforces correctness.
 
 ---
 
-## Procedures (Write Operations)
-
-Procedures represent **state-changing hospital operations**. Each procedure is defined declaratively and rendered automatically as a form.
-
-### Supported Procedures
-
-- `add_patient`
-- `record_symptom`
-- `book_appointment`
-- `place_order`
-- `add_staff_to_dept`
-- `add_funds`
-- `assign_nurse_to_room`
-- `assign_room_to_patient`
-- `assign_doctor_to_appointment`
-- `manage_dept`
-- `release_room`
-- `remove_room`
-- `remove_staff_dept`
-- `complete_staff_dept`
-- `complete_orders`
-
-### How Procedures Work
-
-1. User selects a procedure from the sidebar
-2. UI reads required parameters from `procedures.js`
-3. Input fields are generated dynamically
-4. Data is submitted as JSON to:
+## 🏗️ Architecture Overview
 
 ```
-POST /procedures/{procedure_name}
+┌─────────────┐      HTTP       ┌──────────────────┐      SQL      ┌────────────────────┐
+│  React UI   │ ─────────────▶ │  Express Backend  │ ───────────▶ │   MySQL Database   │
+│ (Dashboard) │                │ (Thin API Layer)  │              │ (Logic + Rules)   │
+└─────────────┘                └──────────────────┘              └────────────────────┘
 ```
 
-5. Backend enforces:
-   - Referential integrity
-   - Business constraints
-   - Null-grouping rules
-   - Financial validation
-   - Uniqueness constraints
-
-The frontend **never validates business logic**, ensuring a single source of truth.
+**Frontend** — No business logic. Forms and tables generated from metadata.  
+**Backend** — No validation. Routes HTTP to SQL stored procedures and views.  
+**Database** — All constraints, rules, and state changes enforced here.
 
 ---
 
-## Views (Read-Only Queries)
+## 🗄️ Database Layer
 
-Views expose **aggregated and derived hospital state** for monitoring and analysis.
+### Core Entities
 
-### Supported Views
+- **Person** (SSN, name, birthdate) — parent for patients and staff
+- **Patient** — contact info, available funds, appointments
+- **Staff** — doctors (license, experience) and nurses (shifts, certifications)
+- **Department** — staffing, management hierarchy
+- **Room** — capacity, assignments, department ownership
+- **Appointment** — patient scheduling with up to 3 doctors
+- **Orders** — lab tests or prescriptions (mutually exclusive)
 
-- `room_wise_view`
-- `symptoms_overview_view`
-- `medical_staff_view`
-- `department_view`
-- `outstanding_charges_view`
+### Key Features
 
-### How Views Work
+- **Stored procedures** for all mutations (add patient, book appointment, assign room, etc.)
+- **Database views** for reporting (room status, outstanding charges, staff roster)
+- **Constraint enforcement** via foreign keys, CHECK constraints, triggers
+- **Transaction isolation** for concurrent operations
 
-1. User selects a view from the sidebar
-2. Frontend fetches data from:
+Patients are charged **only when work completes**. All business rules validated at the database level.
 
-```
-GET /views/{view_name}
-```
-
-3. Returned JSON objects are converted into a table:
-   - Headers derived from object keys
-   - Rows rendered dynamically
-   - Nulls normalized for display
-
-This allows the frontend to support **new views without UI changes**.
+[→ See detailed database documentation](./DATABASE.md)
 
 ---
 
-## Dynamic Rendering System
+## 🔌 Backend Layer
 
-### Procedure Rendering
+Thin Node.js/Express API that:
 
-- Input fields generated from metadata
-- Form state auto-initialized per procedure
-- Fully reusable form component
+- Maps HTTP endpoints to stored procedures (`POST /procedures/{name}`)
+- Exposes database views as JSON (`GET /views/{name}`)
+- Handles connection pooling and error propagation
+- **Never reimplements database logic**
 
-### View Rendering
-
-- Column headers inferred automatically
-- No hardcoded schemas
-- Supports variable column counts
-
-This design allows the backend schema to evolve independently.
-
----
-
-## State Management
-
-- Local state via `useState`
-- Cross-component coordination via prop drilling
-- Action selection centralized in `App.jsx`
+### API Pattern
 
 ```javascript
-const [props, setProps] = useState({
-  selectedAction: ''
-});
+// Procedures
+POST /procedures/add_patient
+{ "ip_ssn": "123-45-6789", "ip_first_name": "John", ... }
+
+// Views
+GET /views/room_wise_view
+→ [{roomNumber: 101, patientName: "John Doe", ...}, ...]
 ```
 
-This keeps the application simple, predictable, and debuggable.
+All validation happens in stored procedures. Backend only routes requests.
+
+[→ See backend README](./backend/README.md)
 
 ---
 
-## Styling & UI
+## 🖥️ Frontend Layer
 
-- **Tailwind CSS** for utility-first styling
-- Responsive flex-based layout
-- Sticky sidebar navigation
-- Clear visual separation between procedures and views
+React dashboard with **metadata-driven UI**:
+
+- Procedures → dynamically generated forms
+- Views → dynamically generated tables
+- No hardcoded schemas—adapts to backend changes automatically
+
+### Key Features
+
+- **Single-page dashboard** with sidebar navigation
+- **Dynamic form generation** from procedure metadata
+- **Dynamic table rendering** from view responses
+- **Tailwind CSS** responsive design
+- **Zero business logic**—only presentation and HTTP calls
+
+When procedures or views change in the database, the UI adapts without code changes.
+
+[→ See frontend README](./frontend/README.md)
 
 ---
 
-## Backend Integration
+## 🚀 Quick Start
 
-The frontend assumes a backend exposing:
+### 1. Database Setup
+```bash
+mysql -u root -p < schema.sql
+mysql -u root -p < procedures.sql
+```
 
-- `/procedures/:name` (POST)
-- `/views/:name` (GET)
+### 2. Backend
+```bash
+cd backend
+npm install
+node app.js  # Runs on http://localhost:3000
+```
 
-Configured via:
+### 3. Frontend
+```bash
+cd frontend
+npm install
+npm run dev  # Runs on http://localhost:5173
+```
 
-```javascript
-export default function () {
-  return 'http://localhost:3000'
+---
+
+## 💡 Why This Architecture?
+
+This project demonstrates **enterprise patterns** rarely seen in typical full-stack apps:
+
+✅ **Database-first design** — constraints enforced at source of truth  
+✅ **Stored-procedure orchestration** — consistent, auditable state changes  
+✅ **Metadata-driven UI** — scales without rewrites  
+✅ **Thin API layer** — minimal maintenance surface  
+✅ **Real-world workflows** — reflects production healthcare/financial systems
+
+This is how **banks, hospitals, and ERP platforms** actually architect their systems.
+
+---
+
+## 📊 Sample Operations
+
+**Add a patient:**
+```json
+POST /procedures/add_patient
+{
+  "ip_ssn": "123-45-6789",
+  "ip_first_name": "Jane",
+  "ip_last_name": "Doe",
+  "ip_birthdate": "1990-05-15",
+  "ip_address": "123 Main St",
+  "ip_funds": 5000,
+  "ip_contact": "555-1234"
 }
 ```
 
-This allows easy switching between local, staging, and production environments.
+**View room status:**
+```json
+GET /views/room_wise_view
+→ [
+  {
+    "roomNumber": 101,
+    "roomType": "ICU",
+    "patientName": "Jane Doe",
+    "nurseAssigned": "John Smith",
+    "doctorAssigned": "Dr. Williams"
+  }
+]
+```
 
 ---
 
-## Why This Architecture Matters
+## 🎓 Technical Highlights
 
-This frontend demonstrates:
-
-- **Enterprise-style separation of UI and business logic**
-- **Metadata-driven interfaces**
-- **Database-first system design**
-- **Scalability without UI rewrites**
-- **Strong alignment with real-world hospital systems**
-
-It mirrors how real internal dashboards are built in healthcare, finance, and logistics organizations.
+- **16 stored procedures** covering patient lifecycle, appointments, orders, staff management
+- **5 database views** for system observability
+- **Repository pattern** in backend for clean SQL abstraction
+- **Dynamic component architecture** in React
+- **Constraint-driven development** — database validates everything
 
 ---
 
-## Ideal Use Cases
+## 📁 Project Structure
 
-- Hospital administration systems
-- Academic database projects
-- Stored-procedure–centric architectures
-- Internal enterprise dashboards
-- Backend-heavy system demonstrations
+```
+hospital-management-system/
+├── database/
+│   ├── schema.sql           # Tables, constraints, views
+│   └── procedures.sql       # All stored procedures
+├── backend/
+│   ├── src/
+│   │   ├── config/          # DB connection
+│   │   ├── Repository/      # Procedure/view abstraction
+│   │   └── Routes/          # Express endpoints
+│   ├── app.js
+│   └── README.md
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # UI components
+│   │   └── data/            # Metadata definitions
+│   ├── package.json
+│   └── README.md
+└── README.md (this file)
+```
 
 ---
 
-## Summary
+## 🔍 What Makes This Different
 
-This project is not a CRUD app.
+**Not a CRUD app.**  
+This is a **procedure execution platform** with a **database-enforced business model**.
 
-It is a **procedure-execution console** and **system observability dashboard** built to interface cleanly with a constraint-heavy backend.
+Most full-stack projects put logic in Express routes or React components. This system intentionally **inverts that pattern**, treating the database as the authoritative logic layer and the application as a thin interface.
 
-That distinction is the core strength of the design.
+That's the architectural core of enterprise systems.
 
 ---
 
-## Next Steps
+## 🛠️ Tech Stack
 
-If you want:
+**Database:** MySQL (stored procedures, views, constraints)  
+**Backend:** Node.js, Express, mysql2  
+**Frontend:** React, Tailwind CSS, Vite  
+**Validation:** Zod (optional, database is primary validator)
 
-- **Backend README (to match this tone)**
-- **Resume bullet points from this project**
-- **System design diagram (frontend ↔ backend)**
-- **Rename/refactor suggestions to make it "FAANG-grade"**
+---
 
-Just say the word.
+## 📌 Future Enhancements
+
+- Docker Compose deployment
+- Authentication & role-based access control
+- Audit logging for all procedure calls
+- Automated stored procedure testing
+- Real-time updates via WebSockets
+
+---
+
+**Built as an academic project. Architected like an enterprise system.**
