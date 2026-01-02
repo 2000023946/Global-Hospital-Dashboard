@@ -86,5 +86,61 @@ export default [
       "ip_roomNumber",
       "ip_roomType"
     ]
+  },
+  {
+    "name": "assign_doctor_to_appointment",
+    "description": "Assigns a room to a patient. Must be unoccupied. Removes them from previous room. Room type must match.",
+    "input_params": [
+      "ip_patientId",
+      "ip_apptDate",
+      "ip_apptTime",
+      "ip_doctorId"
+    ]
+  },
+  {
+    "name": "manage_dept",
+    "description": "Assigns a room to a patient. Must be unoccupied. Removes them from previous room. Room type must match.",
+    "input_params": [
+      "ip_ssn",
+      "ip_deptId",
+    ]
+  },
+  {
+    "name": "release room",
+    "description": "Assigns a room to a patient. Must be unoccupied. Removes them from previous room. Room type must match.",
+    "input_params": [
+      "ip_roomNumber",
+    ]
+  },
+  {
+    "name": "remove room",
+    "description": "Assigns a room to a patient. Must be unoccupied. Removes them from previous room. Room type must match.",
+    "input_params": [
+      "ip_ssn",
+    ]
+  },
+  {
+    "name": "remove  staff dept",
+    "description": "Assigns a room to a patient. Must be unoccupied. Removes them from previous room. Room type must match.",
+    "input_params": [
+      "ip_ssn",
+      "ip_deptId"
+    ]
+  },
+  {
+    "name": "ckmple  staff dept",
+    "description": "Assigns a room to a patient. Must be unoccupied. Removes them from previous room. Room type must match.",
+    "input_params": [
+      "ip_patientId",
+      "ip_apptDate",
+      "ip_apptTime"
+    ]
+  },
+  {
+    "name": "complete_orders",
+    "description": "Assigns a room to a patient. Must be unoccupied. Removes them from previous room. Room type must match.",
+    "input_params": [
+      "ip_num_orders",
+    ]
   }
 ]

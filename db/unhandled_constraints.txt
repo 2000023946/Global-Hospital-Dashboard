@@ -1,0 +1,39 @@
+Unhandled Constraints
+● Nurses can only check in on a legal maximum of 4 rooms.
+○ Why? The nurse table is different from the assigned table b.c it is M:N, so we
+don’t know how many rooms a nurse is assigned to just from the nurse table
+● Appointments must have a doctor
+○ Why? The doctor is separated from the appointment table because it is in M:N
+relationship this means we do not know if an appointment has a doctor assigned
+to it from appointment table only
+● All staff work for at least one department
+○ Why? The staff is separated from the department table because it is in M:N
+relationship this means we do not know if a staff works in a department just by
+looking at the staff table
+● StaffID uniqueness - an employee can either be a Doctor or Nurse but not both. This
+means a Staff member’s staffID should not appear in both the Doctor and Nurse tables
+○ SQL foreign keys only enforce that a value in a column exists in the parent table.
+They do not prevent an entry from existing in multiple child tables.
+● OrderNumber uniqueness - an order can either be a Prescription or LabWork but not
+both. This means an OrderNumber member’s OrderNumber should not appear in both
+the LabWork and Prescription tables
+○ SQL foreign keys only enforce that a value in a column exists in the parent table.
+They do not prevent an entry from existing in multiple child tables.
+● All departments have multiple supporting staff (at least one)
+○ Why? The department is separated from the staff table because it is in M:N
+relationship this means we do not know if a department have working staff in it
+just by looking at the department table
+● A patient can only schedule an appointment if their funds are enough to cover the
+appointment’s cost.
+○ We must compare Appointment.cost with Patient.funds, and we cannot compare
+non-key columns across tables
+● Each room always has a nurse assigned, regardless of occupancy
+○ Why? The room is separated from the nurse table because it is in M:N
+relationship this means we do not know if a room always has a nurse registered
+to it just by looking at the room table
+● A room’s assigned deptID should be the one that the assigned nurse is authorized to
+work in.
+○ Why? Room.deptID is linked to the primary key of Department, Assigned.number
+is linked to Room.number (primary key), and Assigned.staffID is linked to
+Nurse.staffID (primary key). We cannot check consistency along three different
+tables.

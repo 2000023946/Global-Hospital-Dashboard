@@ -107,10 +107,12 @@ class ProceduresRepository {
   }
 
   async complete_orders({ ip_num_orders }) {
-    return pool.query(
+    const result =  pool.query(
       "CALL complete_orders(?)",
       [ip_num_orders]
     );
+    console.log(result)
+    return result;
   }
 }
 

@@ -1,0 +1,95 @@
+Schema Mapping (Team 89)
+Person(ssn, birthdate, address, firstname, lastname)
+Patient(ssn[FK14], contact, funds)
+FK14 : ssn → Person(ssn)
+● On delete cascade → if the person leaves the system the patient should also be
+deleted
+● On update restrict → the ssn can’t change once entered in the system
+Staff(ssn[FK15], salary, staffID, hireDate, deptID[FK3])
+FK15 : ssn → Person(ssn)
+● On delete cascade → if the person leaves the system the staff should also be deleted
+● On update restrict → the ssn can’t change once entered in the system
+FK3 : deptID → Department(deptID)
+● On delete set null → if department leaves the system, staff does not have to manage
+that department.
+● On update cascade → a staff could manage a different department
+Order(orderNumber, priority, date, cost, ssn[FK4], licenseNumber[FK5])
+FK4 : ssn → Person(ssn)
+● On delete cascade → if person leaves the system we don’t need to track their
+information for the order
+● On update restrict → each order is only for one patient, and you can’t update
+FK5 : licenseNumber → Doctor(liscenseNumber)
+● On delete restrict → order must have a doctor associated with it if there is no doctor
+there could be no order
+● On update restrict → each order is placed exactly by one doctor, so you can’t update
+Prescription(orderNumber[FK16], drugType, dosage)
+FK16 : orderNumber → Prescription(orderNumber)
+● On delete cascade → if the order is deleted the prescription information should not be
+stored and deleted
+● On update cascade → if the order number changes, the prescription would also
+change.
+Lab Work(orderNumber[FK17], type)
+FK17 : orderNumber → Prescription(orderNumber)
+● On delete cascade → if the order is deleted the lab work information should not be
+stored and deleted
+● On update cascade → if the order number changes, the lab work information would
+also change.
+Room(number, type, ssn[FK2], deptID[FK6])
+FK2 : ssn → Person(ssn)
+● On delete set null → if a patient leaves the system, the room would just not be
+occupied and still exists.
+● On update cascade → each room could take different people occupying at a given
+instance, and the room does not belong to one patient
+FK6 : deptID → Department(deptID)
+● On delete restrict → since rooms can’t be deleted and each room must have one
+department controlling it.
+● On update cascade → since the room has total participation in the department, if the
+department changes then the room must change to match that department.
+Doctor(licenseNumber, experience, staffID[FK18])
+FK18 : staffID → Staff(staffID)
+● On delete cascade → if the staff leaves the system the doctor should also be deleted
+● On update restrict → the staff ID can’t change once entered in the system
+Nurse(shiftType, regExpiration, staffID[FK19])
+FK19 : staffID → Staff(staffID)
+● On delete cascade → if the staff leaves the system the nurse should also be deleted
+● On update restrict → the staffID can’t change once entered in the system
+Department(deptID, name)
+Appointment(date, time, ssn[FK1], cost)
+FK1 : ssn → Person(ssn)
+● On delete cascade → if a patient leaves the system we would not need to track their
+appointment information, thus deleting the associated appointment
+● On update cascade → since updating the appointment changes the person who has
+that appointment time
+Assigned(staffID[FK7], number[FK8])
+FK7 : staffID → Nurse(staffID)
+● On update cascade → If the staff id changes, the staff assigned to a room changes.
+● On delete cascade → If the staff is deleted, the room assignments is not needed
+FK8 : number → Room(number)
+● On update cascade → If the room number is updated, the nurse could work for a
+different room.
+● On delete cascade → if the room is deleted, the nurse is no longer assigned to that
+room
+WorksIn(staffID[FK9], deptID[FK10])
+FK9 : staffID → Staff(staffID)
+● On update cascade → If the staff id changes, the staff assigned to a department
+changes.
+● On delete cascade → If the staff is deleted, we do not need to store their information.
+FK10 : deptID → Department(deptID)
+● On update cascade → If the deptID is updated, the staff works in the new dept ID
+● On delete cascade → if the depart is deleted, the staff no longer works for that
+department
+ScheduledFor((date, time, ssn)[FK11], liscenseNumber[FK12])
+FK11 : date, time, ssn → Appointment(date, time, ssn)
+● On update cascade → the doctor can have another appointment scheduled for/ update
+the appointment it is scheduled for.
+● On delete cascade → if the appointment is removed then the doctor does not have an
+appointment scheduled for
+FK12 : liscenseNumber → Doctor(liscenseNumber)
+● On delete cascade → If there is no license number associated with the appointment,
+the appointment can not be scheduled.
+● On update cascade → The doctor associated with the appointment can be changed.
+Symptom((date, time, ssn)[FK13], type, numDays)
+FK13 : date, time, ssn → Appointment(date, time, ssn)
+● On delete cascade → if the appointment is deleted then the symptom information does
+not need to be tracked
+● On update restrict → each symptom is associated with one unique appointment
